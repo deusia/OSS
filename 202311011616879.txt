@@ -1,0 +1,181 @@
+四层架构
+
+V层：
+	view
+
+		前端页面
+
+
+C 层
+	Controller
+
+	   SpringMVC: DispatcherServlet 
+
+							把所有请求转换到 程序员开发的Controller中，通过 url-pattern 来匹配  【通过：@RequestMapping,  @PostMapping, @GetMapping 】
+
+					自定义的Controller中方法：
+						//1. 处理用户的请求参数  [在spring mvc中，是通过在 controller的方法中自定义参数来获取]
+
+						//2. 调用 业务层 的方法， 由于设计时，业务层中的方法没有申明抛出异常，所以，大多数人这里是不做 try catch
+						List<XXX> xxxList = null
+						try {
+							xxxList = xxxService.xxx方法(第1步获取的数据);
+						} catch (ServiceException e) {
+							//?
+							return R.error(520, e.getMessage());
+						} 
+
+						//3. 返回视图【返回 String， 代表逻辑视图名】  或 数据【@ResponseBody】, 一般都封装成 R 或 Result, 也可以是 ResponseEntity<T>
+						//
+						return R.ok(200, xxxList);
+
+S层：
+	Service
+
+		程序员要实现的接口，此接口一般是由架构师设计的或是SE来设计。
+	interface XXXService {
+		//
+		List<XXXDTO> findAll();
+
+		boolean add(XXX entity) throws ServiceException;
+
+		boolean update(XXX entity);
+
+		boolean deleteById(Serializable id);
+
+
+	}
+
+
+// 为了设计业务层的异常层结构，我们自定义如下异常
+class ServiceException extends Exception {
+
+	public ServiceException() { super(); }
+	public ServiceException(String message) { super(message); }
+	public ServiceException(String message, Exeptoin cause) { super(mesasge, cause); }
+	//..
+}
+
+//根据业务系统中，有可能出现的业务错误，我们可以定义如下子异常
+class GenderNotMatchException extends ServiceException {
+
+}
+
+class AgeExceedLimitException extends ServiceException {
+
+}
+class GlobalLimitException extends ServiceException {
+
+}
+
+class GlobalReservationStartLimitException extends GlobalLimitException {
+
+}
+
+class GlobalReservationCancelException extends GlobalLimitException {
+
+}
+
+class GlobalReservationEndLimitException extends GlobalLimitException {
+
+}
+
+//实现业务接口
+public class xxxServiceImpl implements XXXService {
+	
+	@Autowire
+	private XXXMapper xxxMapper;
+	
+	@Autowire
+	private YYYMapper yyyMapper;
+	
+
+	//约课
+	@Override
+	public boolean add(XXX entity) throws ServiceException {
+		//再加一个判断
+		if()
+
+		//业务判断
+		if(此课程中的性别限制与会员的性别是否一致【也可基于某个类中某个方法的假设】) {
+			//抛出异常
+			throw new GenderNotMatchException("友好的提示：性别不符合要求");
+		}
+		//
+		if(此课程中的年龄限制是否与会员的年龄不符) {
+			//
+			throw new AgeExceedLimitException("");
+		}
+		//
+		if() {
+			//
+
+		}
+		//
+		...
+
+		return xxxMapper.save(entity);
+	}
+
+	@Override
+	public List<XXXDTO> findAll() throws ServiceException {
+		//
+		List<XXX> xxxList =  xxxMapper.findAll();
+		//
+		List<XXXDTO> dtoList = new ArrayList<>();
+		//
+		for(XXX x : xxxList) {
+			XXXDTO dto = new XXXDTO();
+			dto.setXXX(x.getXXX());
+			....
+			//
+			dtoList.add(dto);
+		}
+		//
+		return dtoList;
+	}
+}
+
+
+
+//程 序员  
+
+//归纳
+
+1. 思维能力
+
+2. 代码能力
+
+////================================
+[1,3,5]  => List<Long>, List<Integer>
+
+
+[{"id":1, "name":"jack"},{"id":1, "name":"jack"},{}]   ==> List<User> 
+class User { id, name }
+
+
+{
+   "values": [{"id":1, "name":"jack"},{}]
+}
+       ==> Map<String, List<User>>
+
+
+   {"data1": [{"id":1, "name":"jack"},{}],
+   "data2": [1,2,3,4],
+   "data3": {"id":1, "name":"jack"}}
+		
+	==> Map<String, Object> abc;
+	//先准备一个 List<User>
+	List<User> users = xxx;
+	abc.put("data1", users);
+	//再准备一个数组
+	List<Integer>  d2 = xxxx;
+	abc.put("data2", d2);
+	//gmf
+	abc.put("data3", xxx);
+
+	return abc;
+
+
+//
+
